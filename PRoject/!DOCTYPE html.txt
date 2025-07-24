@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rice Crop Advisory System</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f4f8; }
+        .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px #ccc; }
+        h2, h3 { text-align: center; color: #2c5282; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        input { width: 100%; padding: 8px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc; }
+        button { margin-top: 20px; width: 100%; padding: 10px; background: #2c5282; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        button:hover { background: #2a4365; }
+        #result { margin-top: 20px; }
+        .error { color: #e53e3e; padding: 10px; border-radius: 4px; background: #fff5f5; }
+        .advice { background: #f0fff4; padding: 15px; border-radius: 4px; margin-top: 10px; }
+        .soil-analysis { background: #ebf8ff; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        ul { padding-left: 20px; }
+        li { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Rice Crop Advisory System</h2>
+        <form id="advisoryForm">
+            <label>Nitrogen (N) in kg/ha:</label>
+            <input type="number" name="N" required placeholder="Enter value (e.g., 90)">
+            
+            <label>Phosphorus (P) in kg/ha:</label>
+            <input type="number" name="P" required placeholder="Enter value (e.g., 42)">
+            
+            <label>Potassium (K) in kg/ha:</label>
+            <input type="number" name="K" required placeholder="Enter value (e.g., 43)">
+            
+            <label>Temperature (°C):</label>
+            <input type="number" step="any" name="temperature" required placeholder="Enter value (e.g., 25)">
+            
+            <label>Humidity (%):</label>
+            <input type="number" step="any" name="humidity" required placeholder="Enter value (e.g., 82)">
+            
+            <label>Soil pH:</label>
+            <input type="number" step="any" name="ph" required placeholder="Enter value (e.g., 6.5)">
+            
+            <label>Rainfall (mm):</label>
+            <input type="number" step="any" name="rainfall" required placeholder="Enter value (e.g., 200)">
+            
+            <button type="submit">Get Recommendation</button>
+        </form>
+        <div id="result"></div>
+    </div>
+    <script>
+        document.getElementById('advisoryForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            for (let key in data) {
+                data[key] = Number(data[key]);
+            }
+            const response = await fetch('/recommend', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            document.getElementById('result').innerHTML = 
+                result.error ? `<div class="error">${result.error}</div>` :
+                `<div>
+                    <h3>Soil Analysis Results</h3>
+                    <div class="soil-analysis">
+                        ${Object.values(result.soil_analysis).join('<br>')}
+                    </div>
+                    <h3>Recommendations</h3>
+                    <div class="advice">
+                        ${result.fertilizer_advice ? `
+                            <strong>${result.fertilizer_advice.general_advice}</strong>
+                            <ul>
+                                ${result.fertilizer_advice.npk_recommendation.map(r => `<li>${r}</li>`).join('')}
+                            </ul>
+                            <ul>
+                                ${result.fertilizer_advice.application_schedule.map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                            <ul>
+                                ${result.fertilizer_advice.important_notes.map(n => `<li>${n}</li>`).join('')}
+                            </ul>
+                        ` : 'No specific fertilizer advice available for this crop.'}
+                    </div>
+                </div>`;
+        };
+    </script>
+</body>
+</html>

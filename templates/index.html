@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌾 Crop Advisory System</title>
+    <link rel="icon" href="/static/images/leaf_icon.png" type="image/png">
+    
+    <style>
+        /* General Body Styling with Background Image */
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-image: url('/static/images/background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Optional overlay to improve text readability over the background */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(224, 242, 247, 0.7);
+            z-index: -1;
+        }
+
+        /* Container for the form and results */
+        .container {
+            max-width: 650px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            overflow: hidden;
+            margin-top: -50px; /* Adjust to move container up/down */
+            animation: fadeIn 0.8s ease-out;
+            backdrop-filter: blur(8px);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Header Image Styling (Full horizontal band) */
+        .header-image {
+            text-align: center;
+            margin: -40px -40px 25px -40px; /* Pulls image to container edges */
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header-image img {
+            width: 100%;
+            height: 180px; /* Adjust this value for your header image */
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Headings */
+        h2, h3 {
+            text-align: center;
+            color: #2a6f7b;
+            margin-bottom: 25px;
+            margin-top: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Form Layout (CSS Grid for 2 columns) */
+        #advisoryForm {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Label & Input Styling */
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 0.95em;
+        }
+        input {
+            width: calc(100% - 20px);
+            padding: 12px 10px;
+            margin-top: 0;
+            border-radius: 6px;
+            border: 1px solid #cbd5e0;
+            box-sizing: border-box;
+            font-size: 1em;
+            color: #2d3748;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.25);
+        }
+
+        /* Button Styling */
+        button {
+            grid-column: 1 / -1;
+            padding: 15px 25px;
+            background-color: #2a6f7b;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(42, 111, 123, 0.3);
+        }
+        button:hover { background-color: #1a5666; transform: translateY(-2px); }
+        button:active { transform: translateY(0); box-shadow: 0 2px 5px rgba(42, 111, 123, 0.3); }
+
+        /* Result Sections Styling (Matching image design) */
+        #result { 
+            margin-top: 30px; 
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .result-section-header {
+            text-align: center;
+            color: #2c5282;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .result-box-blue {
+            background: #e6f7ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-size: 1.0em;
+            border: 1px solid #90cdf4;
+        }
+        .result-box-green {
+            background: #e6ffe6;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border: 1px solid #9ae6b4;
+        }
+        /* Specific styling for lists within result-box-green for detailed advice */
+        .result-box-green ul {
+            list-style: none; /* Remove default bullets */
+            padding-left: 0; /* Remove default padding */
+            margin-top: 10px;
+            margin-bottom: 0;
+        }
+        .result-box-green li {
+            margin-bottom: 5px;
+            color: #333;
+            padding-left: 15px; /* Indent list items for bullet effect */
+            position: relative;
+        }
+        .result-box-green li:not(.no-bullet)::before {
+            content: "•"; /* Custom bullet point */
+            color: #2a6f7b; /* Bullet color */
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
+            line-height: 1;
+        }
+
+        .result-box-green strong { color: #2c5282; }
+        .result-box-green h4, .result-box-green h5 {
+            margin-top: 15px; /* More space above sub-headings */
+            margin-bottom: 8px;
+            color: #2c5282;
+            font-weight: 700; /* Bolder */
+        }
+        .error {
+            color: #e53e3e; padding: 15px; border-radius: 8px; background: #fff5f5;
+            text-align: center; font-weight: 600; border: 1px solid #fed7d7;
+        }
+
+        /* General advice at the bottom */
+        .general-tip { /* Renamed 'advice' to 'general-tip' for clarity */
+            background: #f0fff4; padding: 15px; border-radius: 4px; margin-top: 25px;
+            border: 1px solid #d4edda;
+        }
+        .general-tip h4 { color: #2c5282; font-weight: 600; margin-top: 0; margin-bottom: 5px; }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            #advisoryForm { grid-template-columns: 1fr; }
+            .container { padding: 20px; margin: -20px 10px 20px 10px; }
+            .header-image { margin: -20px -20px 20px -20px; }
+            .header-image img { height: 100px; }
+            .result-box-blue, .result-box-green { padding: 12px; } /* Slightly less padding on mobile */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-image">
+            <img src="/static/images/header.jpg" alt="Crop Advisory Header">
+        </div>
+        
+        <h2>🌾 Rice Crop Advisory System</h2>
+        <form id="advisoryForm">
+            <div class="form-group">
+                <label for="N">Nitrogen (N) in kg/ha:</label>
+                <input type="number" id="N" name="N" required placeholder="e.g., 90">
+            </div>
+            
+            <div class="form-group">
+                <label for="P">Phosphorus (P) in kg/ha:</label>
+                <input type="number" id="P" name="P" required placeholder="e.g., 42">
+            </div>
+            
+            <div class="form-group">
+                <label for="K">Potassium (K) in kg/ha:</label>
+                <input type="number" id="K" name="K" required placeholder="e.g., 43">
+            </div>
+            
+            <div class="form-group">
+                <label for="temperature">Temperature (°C):</label>
+                <input type="number" step="any" id="temperature" name="temperature" required placeholder="e.g., 25">
+            </div>
+            
+            <div class="form-group">
+                <label for="humidity">Humidity (%):</label>
+                <input type="number" step="any" id="humidity" name="humidity" required placeholder="e.g., 82">
+            </div>
+            
+            <div class="form-group">
+                <label for="ph">Soil pH:</label>
+                <input type="number" step="any" id="ph" name="ph" required placeholder="e.g., 6.5">
+            </div>
+            
+            <div class="form-group">
+                <label for="rainfall">Rainfall (mm):</label>
+                <input type="number" step="any" id="rainfall" name="rainfall" required placeholder="e.g., 200">
+            </div>
+            
+            <button type="submit">Get Recommendation</button>
+        </form>
+        <div id="result"></div>
+    </div>
+    <script>
+        document.getElementById('advisoryForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            for (let key in data) {
+                data[key] = Number(data[key]);
+            }
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div style="text-align: center; color: #4a5568; margin-top: 10px;">Fetching recommendation...</div>';
+
+            try {
+                const response = await fetch('/recommend', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    resultDiv.innerHTML = `<div class="error">Error: ${errorDetails.error || 'Server responded with an error.'}</div>`;
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (result.error) {
+                    resultDiv.innerHTML = `<div class="error">${result.error}</div>`;
+                } else {
+                    const recommendedCrop = result.recommended_crop || 'N/A';
+                    
+                    // --- Constructing Soil Analysis HTML ---
+                    const soilAnalysisHtml = `
+                        <div class="result-section-header">Soil Analysis Results</div>
+                        <div class="result-box-blue">
+                            ${result.soil_analysis ? `
+                                <div>Nitrogen (N): ${result.soil_analysis["Nitrogen (N)"]}</div>
+                                <div>pH Level: ${result.soil_analysis["pH Level"]}</div>
+                                <div>Phosphorus (P): ${result.soil_analysis["Phosphorus (P)"]}</div>
+                                <div>Potassium (K): ${result.soil_analysis["Potassium (K)"]}</div>
+                            ` : '<p>No detailed soil analysis provided.</p>'}
+                        </div>
+                    `;
+
+                    // --- Constructing Recommendations HTML ---
+                    const fertilizerAdviceHtml = `
+                        <div class="result-section-header">Recommendations</div>
+                        <div class="result-box-green">
+                            ${result.fertilizer_advice ? `
+                                <p><strong>${result.fertilizer_advice.general_overview || 'General advice missing.'}</strong></p>
+                                
+                                ${result.fertilizer_advice.key_principles && result.fertilizer_advice.key_principles.length > 0 ? `
+                                    <h4>Key Principles:</h4>
+                                    <ul>
+                                        ${result.fertilizer_advice.key_principles.map(item => `<li>${item}</li>`).join('')}
+                                    </ul>
+                                ` : ''}
+
+                                ${result.fertilizer_advice.npk_recommendation && result.fertilizer_advice.npk_recommendation.length > 0 ? `
+                                    <h4>NPK Recommendation:</h4>
+                                    <ul>
+                                        ${result.fertilizer_advice.npk_recommendation.map(item => `<li>${item}</li>`).join('')}
+                                    </ul>
+                                ` : ''}
+
+                                ${result.fertilizer_advice.ph_specific_advice && result.fertilizer_advice.ph_specific_advice.length > 0 ? `
+                                    <h4>Soil pH Guidance:</h4>
+                                    <ul>
+                                        ${result.fertilizer_advice.ph_specific_advice.map(item => `<li>${item}</li>`).join('')}
+                                    </ul>
+                                ` : ''}
+
+                                ${result.fertilizer_advice.application_timeline && result.fertilizer_advice.application_timeline.length > 0 ? `
+                                    <h4>Application Timeline:</h4>
+                                    <ul>
+                                        ${result.fertilizer_advice.application_timeline.map(item => `<li>${item}</li>`).join('')}
+                                    </ul>
+                                ` : ''}
+
+                                ${result.fertilizer_advice.important_guidelines && result.fertilizer_advice.important_guidelines.length > 0 ? `
+                                    <h4>Important Guidelines:</h4>
+                                    <ul>
+                                        ${result.fertilizer_advice.important_guidelines.map(item => `<li>${item}</li>`).join('')}
+                                    </ul>
+                                ` : ''}
+
+                                ${result.fertilizer_advice.special_considerations && result.fertilizer_advice.special_considerations.length > 0 ? `
+                                    <h4>Special Considerations for Small Farm Holders:</h4>
+                                    <ul>
+                                        ${result.fertilizer_advice.special_considerations.map(item => `<li>${item}</li>`).join('')}
+                                    </ul>
+                                ` : ''}
+
+                            ` : '<p>No specific fertilizer advice available.</p>'}
+                        </div>
+                    `;
+
+                    // Assemble the final result display
+                    resultDiv.innerHTML = `
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <h3>Recommended Crop: <span style="color: #007bff; font-weight: 700;">${recommendedCrop}</span></h3>
+                        </div>
+                        ${soilAnalysisHtml}
+                        ${fertilizerAdviceHtml}
+                        
+                        <div class="general-tip">
+                            <h4>General Crop Care Tip:</h4>
+                            <p>Always observe your crop and soil closely. Local conditions can vary, so adjust practices as needed. Consult local agricultural experts for personalized advice.</p>
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                console.error('Fetch error:', error);
+                resultDiv.innerHTML = `<div class="error">Could not connect to the server or parse response. Please ensure the backend is running and reachable.</div>`;
+            }
+        };
+    </script>
+</body>
+</html>
