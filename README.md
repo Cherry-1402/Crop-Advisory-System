@@ -1,5 +1,10 @@
 # Data-Driven Crop Advisory System
 
+## Contributors
+
+* Charan Sai (24CSE342)
+* Parsuram Biswal (24CSE341)
+* Suraj Kumar Nayak (24CSE303)
 This project provides a web-based Crop Advisory System that leverages a machine learning model to recommend crops and provide essential fertilizer advice based on soil and environmental parameters. It's specifically designed with small farm holders in mind.
 
 ## Features
